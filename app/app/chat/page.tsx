@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useWallet } from "@/components/WalletProvider";
+import ChatInput from "@/components/ChatInput";
 
 interface Msg {
   role: "user" | "assistant";
@@ -25,11 +26,15 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [daily, setDaily] = useState<{ used: number; cap: number } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const pendingQ = useRef<string | null>(null);
+  const prevWallet = useRef<string | null | undefined>(undefined);
 
   const refreshDaily = useCallback(async () => {
     if (!wallet) return;
     try {
-      const res = await fetch(`/api/dashboard?wallet=${encodeURIComponent(wallet)}`);
+      const res = await fetch(
+        `/api/dashboard?wallet=${encodeURIComponent(wallet)}`
+      );
       if (res.ok) {
         const d = await res.json();
         setDaily(d.daily);
@@ -39,20 +44,7 @@ export default function ChatPage() {
     }
   }, [wallet]);
 
-  useEffect(() => {
-    setMessages([]);
-    setError(null);
-    refreshDaily();
-  }, [wallet, refreshDaily]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const send = async () => {
-    const text = input.trim();
-    if (!text || !wallet || loading) return;
-    setInput("");
+  const doSend = useCallback(async (text: string, w: string) => {
     setError(null);
     setMessages((m) => [...m, { role: "user", text }]);
     setLoading(true);
@@ -60,7 +52,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet, message: text }),
+        body: JSON.stringify({ wallet: w, message: text }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -83,37 +75,62 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  if (!wallet) {
-    return (
-      <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
-        <p className="text-lg">Connect your wallet to start chatting.</p>
-        <p className="mt-2 text-sm text-muted">
-          Use the Connect button in the header — any address works in this demo.
-        </p>
-      </div>
-    );
-  }
+  const send = useCallback(() => {
+    const text = input.trim();
+    if (!text || !wallet || loading) return;
+    setInput("");
+    void doSend(text, wallet);
+  }, [input, wallet, loading, doSend]);
+
+  // hero prefill: ?q= arrives from the landing input — capture once
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q")?.trim();
+    if (!q) return;
+    window.history.replaceState(null, "", "/app/chat");
+    pendingQ.current = q;
+    setInput(q);
+  }, []);
+
+  // wallet lifecycle: reset the thread when the identity changes,
+  // auto-send a pending hero question on first connect
+  useEffect(() => {
+    const was = prevWallet.current;
+    prevWallet.current = wallet;
+    if (was !== undefined && was !== wallet) setMessages([]);
+    setError(null);
+    refreshDaily();
+    if (was === null && wallet && pendingQ.current) {
+      const q = pendingQ.current;
+      pendingQ.current = null;
+      setInput("");
+      void doSend(q, wallet);
+    }
+  }, [wallet, refreshDaily, doSend]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Chat &amp; earn</h1>
-        {daily && (
-          <span className="rounded-full bg-white/5 px-4 py-1 font-mono text-sm text-cyan">
+    <div className="flex min-h-[62dvh] flex-col">
+      <div className="mb-6 flex items-baseline justify-between">
+        <h1 className="text-xl font-light lowercase text-ink">chat &amp; earn</h1>
+        {daily && wallet && (
+          <span className="font-mono text-xs text-faint">
             today {daily.used}/{daily.cap} rewarded
           </span>
         )}
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm">
+        <div className="mb-5 rounded-2xl border border-line bg-white px-5 py-4 text-sm text-ink shadow-sm">
           {error === "finish X tasks first" ? (
             <>
-              Finish your X tasks first —{" "}
-              <Link href="/app/tasks" className="font-semibold text-gold underline">
-                go to Tasks
+              finish your x tasks first —{" "}
+              <Link href="/app/tasks" className="underline underline-offset-2">
+                go to tasks
               </Link>
             </>
           ) : (
@@ -122,70 +139,77 @@ export default function ChatPage() {
         </div>
       )}
 
-      <div className="flex h-[55vh] flex-col rounded-xl border border-white/10 bg-white/[0.03]">
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          {messages.length === 0 && (
-            <p className="mt-8 text-center text-sm text-muted">
-              Ask anything about $YAPCP. Quality questions earn more: 100 / 300
-              / 1,000 pts.
+      <div className="flex-1">
+        {!wallet ? (
+          <div className="py-14 text-center">
+            <p className="text-lg font-light text-ink">
+              connect your wallet to start chatting.
             </p>
-          )}
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
-                  m.role === "user"
-                    ? "bg-gold/20 text-ink"
-                    : "border border-white/10 bg-white/5"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{m.text}</p>
-                {m.role === "assistant" && m.reward !== undefined && m.reward > 0 && (
-                  <div className="mt-2 inline-block rounded-full bg-cyan/15 px-2.5 py-0.5 font-mono text-xs text-cyan">
-                    +{m.reward} pts · {TIER_LABEL[m.tier || 1]}
-                  </div>
-                )}
-                {m.role === "assistant" && m.note && (
-                  <div className="mt-2 text-xs text-muted">{m.note}</div>
-                )}
-              </div>
+            <p className="mt-2 font-mono text-xs text-muted">
+              use the connect button, top right — any address works in this
+              demo.
+            </p>
+          </div>
+        ) : (
+          <>
+            {messages.length === 0 && (
+              <p className="mt-10 text-center text-sm text-faint">
+                ask anything about $YAPCP. quality questions earn more — 100 /
+                300 / 1,000 pts.
+              </p>
+            )}
+            <div className="space-y-6">
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  {m.role === "user" ? (
+                    <div className="max-w-[85%] rounded-2xl border border-line bg-wash px-5 py-3.5">
+                      <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">
+                        {m.text}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="max-w-[92%]">
+                      <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">
+                        {m.text}
+                      </p>
+                      {m.reward !== undefined && m.reward > 0 && (
+                        <p className="mt-1.5 font-mono text-[11px] text-muted">
+                          +{m.reward} pts · {TIER_LABEL[m.tier || 1]}
+                        </p>
+                      )}
+                      {m.note && (
+                        <p className="mt-1.5 font-mono text-[11px] text-faint">
+                          {m.note}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {loading && <p className="font-mono text-xs text-faint">thinking…</p>}
+              <div ref={bottomRef} />
             </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-muted">
-                thinking…
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
-        <div className="flex gap-2 border-t border-white/10 p-3">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") send();
-            }}
-            placeholder="Ask about $YAPCP…"
-            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm placeholder:text-muted/60 focus:border-gold focus:outline-none"
-          />
-          <button
-            onClick={send}
-            disabled={loading || !input.trim()}
-            className="rounded-lg bg-gold px-5 py-2.5 text-sm font-bold text-navy hover:brightness-110 disabled:opacity-40"
-          >
-            Send
-          </button>
-        </div>
+          </>
+        )}
       </div>
-      <p className="mt-3 text-xs text-muted">
-        Max 1 rewarded message per 2 minutes • 20 rewarded messages/day •
-        duplicates and off-topic messages earn 0 pts.
-      </p>
+
+      <div className="sticky bottom-16 z-10 bg-white/90 pt-4 backdrop-blur">
+        <ChatInput
+          value={input}
+          onChange={setInput}
+          onSend={send}
+          disabled={loading || !wallet}
+          placeholder={
+            wallet ? "Ask about $YAPCP…" : "Connect your wallet first…"
+          }
+        />
+        <p className="mt-3 text-center font-mono text-[10px] leading-relaxed text-faint">
+          1 rewarded msg per 2 min · 20/day · duplicates &amp; off-topic earn 0
+        </p>
+      </div>
     </div>
   );
 }

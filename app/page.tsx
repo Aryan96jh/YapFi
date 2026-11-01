@@ -1,8 +1,11 @@
 "use client";
-import { Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { WalletProvider } from "@/components/WalletProvider";
+import Corners from "@/components/Corners";
+import GlyphField from "@/components/GlyphField";
+import ChatInput from "@/components/ChatInput";
+import ScrambleHeading from "@/components/ScrambleHeading";
 
 function ReferralCapture() {
   const params = useSearchParams();
@@ -21,135 +24,192 @@ function ReferralCapture() {
   return null;
 }
 
+const SUGGESTIONS = ["what is $YAPCP?", "how do I earn?", "i want in"];
+
 const STEPS = [
-  {
-    n: "1",
-    title: "Connect wallet",
-    text: "Link your Solana wallet. One wallet per account.",
-  },
-  {
-    n: "2",
-    title: "Enter your X ID",
-    text: "Drop your Twitter handle and link your account.",
-  },
-  {
-    n: "3",
-    title: "Like • Comment • Retweet",
-    text: "Do all three on the launch post, get verified, earn 5,000 pts.",
-  },
-  {
-    n: "4",
-    title: "Chat & earn",
-    text: "Ask quality questions about $YAPCP. Better questions, more points.",
-  },
-  {
-    n: "5",
-    title: "Refer & earn more",
-    text: "Share your link: 2,500 pts per friend + 10% of their chat earnings.",
-  },
+  ["01", "connect wallet", "link your solana wallet. one wallet per account."],
+  ["02", "enter your x id", "drop your handle and link your account."],
+  [
+    "03",
+    "like · comment · retweet",
+    "do all three on the launch post, get verified, earn 5,000 pts.",
+  ],
+  [
+    "04",
+    "chat & earn",
+    "ask quality questions about $YAPCP. better questions, more points.",
+  ],
+  [
+    "05",
+    "refer & earn more",
+    "share your link: 2,500 pts per friend + 10% of their chat earnings.",
+  ],
 ];
 
 const REWARDS: [string, string][] = [
-  ["Basic question", "100 pts"],
-  ["Detailed question", "300 pts"],
-  ["Deep / researched question", "1,000 pts"],
-  ["Daily cap", "20 rewarded messages (~20,000 pts max)"],
-  ["X task bundle (like + comment + retweet)", "5,000 pts — one-time"],
-  ["Referral", "2,500 pts + 10% of referee chat earnings"],
+  ["basic question", "100 pts"],
+  ["detailed question", "300 pts"],
+  ["deep / researched question", "1,000 pts"],
+  ["x task bundle", "5,000 pts · one-time"],
+  ["referral converts", "2,500 pts"],
+  ["referral chat earnings", "10% · forever"],
+  ["daily cap", "20 rewarded msgs · ~20,000 pts max"],
 ];
+
+const TOKENOMICS: [string, string][] = [
+  ["chat & task rewards", "40%"],
+  ["referral pool", "15%"],
+  ["liquidity", "15%"],
+  ["team · vested", "15%"],
+  ["treasury", "15%"],
+];
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint">
+      {children}
+    </p>
+  );
+}
+
+function Hero() {
+  const router = useRouter();
+  const [value, setValue] = useState("");
+
+  const go = (text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    router.push(`/app/chat?q=${encodeURIComponent(t)}`);
+  };
+
+  return (
+    <section className="relative z-10 mx-auto flex min-h-[92dvh] w-full max-w-3xl flex-col items-center justify-center px-5 pb-16 pt-28">
+      <ScrambleHeading
+        text="what do you want to know?"
+        className="text-center text-4xl font-light tracking-tight text-ink md:text-[3.4rem] md:leading-[1.1]"
+      />
+      <p className="mt-4 text-center text-[15px] text-muted">
+        yapfi is a chat-to-earn wrapper for $YAPCP — ask, learn, earn.
+      </p>
+
+      <div className="mt-8 w-full max-w-[660px]">
+        <ChatInput
+          value={value}
+          onChange={setValue}
+          onSend={() => go(value)}
+          placeholder="Ask YapFi anything..."
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => go(s)}
+            className="rounded-full border border-line bg-white px-4 py-1.5 font-mono text-xs text-muted shadow-sm transition hover:border-faint hover:text-ink"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-10 max-w-md text-center font-mono text-[11px] leading-relaxed text-faint">
+        points are pre-launch and convert 1:1 to $YAPCP at TGE · not financial
+        advice · not affiliated with x
+      </p>
+    </section>
+  );
+}
 
 export default function Landing() {
   return (
-    <div className="min-h-screen">
-      <Suspense fallback={null}>
-        <ReferralCapture />
-      </Suspense>
+    <WalletProvider>
+      <div className="relative min-h-screen bg-white text-ink">
+        <GlyphField />
+        <Corners />
+        <Suspense fallback={null}>
+          <ReferralCapture />
+        </Suspense>
 
-      {/* Hero */}
-      <section className="mx-auto flex max-w-4xl flex-col items-center px-4 pb-16 pt-20 text-center">
-        <Image
-          src="/logo.svg"
-          alt="YapFi logo"
-          width={200}
-          height={200}
-          className="rounded-2xl"
-          priority
-        />
-        <h1 className="mt-8 text-5xl font-extrabold tracking-tight md:text-6xl">
-          YapFi
-        </h1>
-        <p className="mt-4 text-2xl font-semibold text-gold">
-          Ask. Learn. Earn.
-        </p>
-        <p className="mt-4 max-w-xl text-muted">
-          A chat-to-earn AI wrapper for the{" "}
-          <span className="font-semibold text-ink">$YAPCP</span> token. The more
-          you yap, the more you earn.
-        </p>
-        <p className="mt-3 font-mono text-sm text-cyan">
-          $YAPCP • 100,000,000,000 supply • claimable after launch
-        </p>
-        <Link
-          href="/app/chat"
-          className="mt-10 rounded-xl bg-gold px-8 py-3 text-lg font-bold text-navy hover:brightness-110"
-        >
-          Launch app
-        </Link>
-      </section>
+        <Hero />
 
-      {/* How it works */}
-      <section className="mx-auto max-w-5xl px-4 pb-16">
-        <h2 className="text-center text-3xl font-bold">How it works</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-5">
-          {STEPS.map((s) => (
-            <div
-              key={s.n}
-              className="rounded-xl border border-white/10 bg-white/5 p-5"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/20 font-bold text-gold">
-                {s.n}
-              </div>
-              <h3 className="mt-3 font-semibold">{s.title}</h3>
-              <p className="mt-1 text-sm text-muted">{s.text}</p>
+        {/* how it works */}
+        <section className="relative z-10 mx-auto max-w-3xl px-5 py-16">
+          <div className="border-t border-line pt-10">
+            <SectionLabel>how it works</SectionLabel>
+            <div className="mt-6">
+              {STEPS.map(([n, title, text]) => (
+                <div
+                  key={n}
+                  className="flex gap-5 border-b border-line py-5 first:border-t"
+                >
+                  <span className="w-8 shrink-0 font-mono text-xs text-faint">
+                    {n}
+                  </span>
+                  <div>
+                    <h3 className="text-[15px] text-ink">{title}</h3>
+                    <p className="mt-0.5 text-sm text-muted">{text}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Rewards */}
-      <section className="mx-auto max-w-3xl px-4 pb-16">
-        <h2 className="text-center text-3xl font-bold">Rewards</h2>
-        <p className="mt-2 text-center text-sm text-muted">
-          Pre-launch you earn points — 1 point = 1 $YAPCP, claimable after
-          launch.
-        </p>
-        <div className="mt-8 overflow-hidden rounded-xl border border-white/10">
-          {REWARDS.map(([label, value], i) => (
-            <div
-              key={label}
-              className={`flex items-center justify-between px-6 py-4 ${
-                i % 2 === 0 ? "bg-white/5" : "bg-transparent"
-              }`}
-            >
-              <span className="text-muted">{label}</span>
-              <span className="font-mono font-semibold text-cyan">{value}</span>
+        {/* earnings */}
+        <section className="relative z-10 mx-auto max-w-3xl px-5 py-16">
+          <div className="border-t border-line pt-10">
+            <SectionLabel>earnings</SectionLabel>
+            <p className="mt-4 text-sm text-muted">
+              pre-launch you earn points — 1 point = 1 $YAPCP, claimable after
+              launch.
+            </p>
+            <div className="mt-6">
+              {REWARDS.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-baseline justify-between gap-4 border-b border-line py-3.5 first:border-t"
+                >
+                  <span className="text-sm text-muted">{label}</span>
+                  <span className="shrink-0 font-mono text-sm text-ink">
+                    {value}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="mt-8 text-center">
-          <Link
-            href="/app/chat"
-            className="rounded-xl bg-gold px-8 py-3 text-lg font-bold text-navy hover:brightness-110"
-          >
-            Start earning
-          </Link>
-        </div>
-      </section>
+            <p className="mt-6 font-mono text-[11px] leading-relaxed text-faint">
+              1 rewarded message per 2 min · duplicates &amp; off-topic earn 0 ·
+              paid from a fixed daily pool, so rewards can&apos;t inflate
+            </p>
+          </div>
+        </section>
 
-      <footer className="border-t border-white/10 px-4 py-8 text-center text-xs text-muted">
-        YapFi prototype — points have no value until $YAPCP launches. Demo
-        build, not financial advice.
-      </footer>
-    </div>
+        {/* tokenomics */}
+        <section className="relative z-10 mx-auto max-w-3xl px-5 py-16">
+          <div className="border-t border-line pt-10">
+            <SectionLabel>$YAPCP · 100,000,000,000 supply</SectionLabel>
+            <div className="mt-6">
+              {TOKENOMICS.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-baseline justify-between gap-4 border-b border-line py-3.5 first:border-t"
+                >
+                  <span className="text-sm text-muted">{label}</span>
+                  <span className="shrink-0 font-mono text-sm text-ink">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="relative z-10 border-t border-line px-5 py-8">
+          <p className="text-center font-mono text-[11px] text-faint">
+            yapfi prototype · demo build · nothing here is financial advice
+          </p>
+        </footer>
+      </div>
+    </WalletProvider>
   );
 }

@@ -26,7 +26,9 @@ export default function DashboardPage() {
   const load = useCallback(async () => {
     if (!wallet) return;
     try {
-      const res = await fetch(`/api/dashboard?wallet=${encodeURIComponent(wallet)}`);
+      const res = await fetch(
+        `/api/dashboard?wallet=${encodeURIComponent(wallet)}`
+      );
       if (res.ok) setData(await res.json());
     } catch {
       /* ignore */
@@ -40,89 +42,121 @@ export default function DashboardPage() {
 
   if (!wallet) {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
-        <p className="text-lg">Connect your wallet to see your dashboard.</p>
+      <div className="py-14 text-center">
+        <p className="text-lg font-light text-ink">
+          connect your wallet to see your dashboard.
+        </p>
       </div>
     );
   }
   if (!data) {
-    return <p className="text-muted">Loading…</p>;
+    return <p className="py-14 text-center font-mono text-xs text-faint">loading…</p>;
   }
 
   const pct = Math.min(100, Math.round((data.daily.used / data.daily.cap) * 100));
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="text-xl font-light lowercase text-ink">dashboard</h1>
 
-      {/* Balance */}
-      <div className="mt-6 rounded-xl border border-gold/30 bg-gradient-to-br from-gold/15 to-transparent p-6 text-center">
-        <p className="text-sm text-muted">Total points</p>
-        <p className="mt-1 font-mono text-5xl font-extrabold text-gold">
+      {/* balance */}
+      <div className="mt-8 border-t border-line pt-8 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint">
+          total points
+        </p>
+        <p className="mt-2 text-6xl font-light tracking-tight text-ink md:text-7xl">
           {data.balance.toLocaleString()}
         </p>
-        <p className="mt-1 text-xs text-muted">
-          1 point = 1 $YAPCP • claimable after launch
+        <p className="mt-3 font-mono text-[11px] text-faint">
+          1 point = 1 $YAPCP · claimable after launch
         </p>
-        <div className="mx-auto mt-4 flex max-w-md justify-center gap-6 text-sm">
-          <span>
-            Chat <span className="font-mono text-cyan">{data.split.chat.toLocaleString()}</span>
-          </span>
-          <span>
-            Tasks <span className="font-mono text-cyan">{data.split.tasks.toLocaleString()}</span>
-          </span>
-          <span>
-            Referrals{" "}
-            <span className="font-mono text-cyan">{data.split.referrals.toLocaleString()}</span>
-          </span>
-        </div>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {/* Today's progress */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-          <h2 className="font-semibold">Today&apos;s progress</h2>
-          <p className="mt-2 font-mono text-2xl">
-            {data.daily.used}
-            <span className="text-muted">/{data.daily.cap}</span>
-          </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-cyan" style={{ width: `${pct}%` }} />
+      {/* split */}
+      <div className="mt-8 border-t border-line">
+        {(
+          [
+            ["chat", data.split.chat],
+            ["tasks", data.split.tasks],
+            ["referrals", data.split.referrals],
+          ] as const
+        ).map(([label, value]) => (
+          <div
+            key={label}
+            className="flex items-baseline justify-between border-b border-line py-3.5"
+          >
+            <span className="font-mono text-xs uppercase tracking-[0.14em] text-faint">
+              {label}
+            </span>
+            <span className="font-mono text-sm text-ink">
+              {value.toLocaleString()}
+            </span>
           </div>
-          <p className="mt-2 text-xs text-muted">rewarded messages today</p>
-        </div>
-
-        {/* Task checklist */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-          <h2 className="font-semibold">X tasks</h2>
-          <ul className="mt-2 space-y-1 text-sm">
-            {(["like", "comment", "retweet"] as const).map((t) => (
-              <li key={t} className="flex items-center gap-2">
-                <span className={data.tasks[t] ? "text-cyan" : "text-muted"}>
-                  {data.tasks[t] ? "✓" : "○"}
-                </span>
-                <span className="capitalize text-muted">{t}</span>
-              </li>
-            ))}
-          </ul>
-          {!data.tasks.allDone && (
-            <Link href="/app/tasks" className="mt-3 inline-block text-sm text-gold underline underline-offset-2">
-              Finish tasks
-            </Link>
-          )}
-        </div>
+        ))}
       </div>
 
-      {/* Referral panel */}
-      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-5">
-        <h2 className="font-semibold">Referrals</h2>
+      {/* today's progress */}
+      <div className="mt-10">
+        <div className="flex items-baseline justify-between">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint">
+            today
+          </p>
+          <p className="font-mono text-sm text-ink">
+            {data.daily.used}
+            <span className="text-faint">/{data.daily.cap}</span>
+          </p>
+        </div>
+        <div className="mt-3 h-px bg-line">
+          <div className="h-px bg-ink" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="mt-2 font-mono text-[10px] text-faint">
+          rewarded messages today
+        </p>
+      </div>
+
+      {/* x tasks checklist */}
+      <div className="mt-10 border-t border-line pt-6">
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint">
+          x tasks
+        </p>
+        <div className="mt-2">
+          {(["like", "comment", "retweet"] as const).map((t) => (
+            <div
+              key={t}
+              className="flex items-center justify-between border-b border-line py-3"
+            >
+              <span className="text-sm text-muted">{t}</span>
+              <span
+                className={`font-mono text-[11px] ${data.tasks[t] ? "text-ink" : "text-faint"}`}
+              >
+                {data.tasks[t] ? "done" : "todo"}
+              </span>
+            </div>
+          ))}
+        </div>
+        {!data.tasks.allDone && (
+          <Link
+            href="/app/tasks"
+            className="mt-4 inline-block font-mono text-xs text-muted underline underline-offset-2 hover:text-ink"
+          >
+            finish tasks
+          </Link>
+        )}
+      </div>
+
+      {/* referrals */}
+      <div className="mt-10 border-t border-line pt-6">
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint">
+          referrals
+        </p>
         {data.referral.link ? (
           <>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex gap-2">
               <input
                 readOnly
                 value={data.referral.link}
-                className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2 font-mono text-sm text-cyan"
+                onClick={(e) => e.currentTarget.select()}
+                className="min-w-0 flex-1 rounded-xl border border-line bg-wash px-4 py-2.5 font-mono text-xs text-muted focus:border-ink focus:outline-none"
               />
               <button
                 onClick={() => {
@@ -132,43 +166,46 @@ export default function DashboardPage() {
                     setTimeout(() => setCopied(false), 1500);
                   }
                 }}
-                className="rounded-lg bg-gold px-4 py-2 text-sm font-bold text-navy hover:brightness-110"
+                className="shrink-0 rounded-full border border-ink bg-white px-5 py-2.5 text-sm text-ink transition hover:bg-ink hover:text-white"
               >
-                {copied ? "Copied!" : "Copy"}
+                {copied ? "copied" : "copy"}
               </button>
             </div>
-            <div className="mt-4 flex gap-6 text-sm text-muted">
-              <span>
-                Clicks <span className="font-mono text-ink">{data.referral.clicks}</span>
-              </span>
-              <span>
-                Conversions{" "}
-                <span className="font-mono text-ink">{data.referral.conversions}</span>
-              </span>
-              <span>
-                Earnings{" "}
-                <span className="font-mono text-cyan">
-                  {data.referral.earnings.toLocaleString()} pts
-                </span>
-              </span>
+            <div className="mt-5 flex gap-8">
+              {(
+                [
+                  ["clicks", data.referral.clicks],
+                  ["conversions", data.referral.conversions],
+                  ["earnings", `${data.referral.earnings.toLocaleString()} pts`],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label}>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
+                    {label}
+                  </p>
+                  <p className="mt-1 font-mono text-sm text-ink">{value}</p>
+                </div>
+              ))}
             </div>
           </>
         ) : (
-          <p className="mt-2 text-sm text-muted">
-            Finish the X tasks to unlock your referral link.
+          <p className="mt-3 text-sm text-muted">
+            finish the x tasks to unlock your referral link.
           </p>
         )}
       </div>
 
-      {/* Claim */}
-      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-5 text-center">
+      {/* claim */}
+      <div className="mt-10 border-t border-line pt-10 text-center">
         <button
           disabled
-          className="cursor-not-allowed rounded-xl bg-white/10 px-8 py-3 text-lg font-bold text-muted"
+          className="cursor-not-allowed rounded-full border border-line bg-wash px-10 py-3 text-base text-faint"
         >
-          Claim $YAPCP
+          claim $YAPCP
         </button>
-        <p className="mt-2 text-xs text-muted">Claim opens at $YAPCP launch.</p>
+        <p className="mt-3 font-mono text-[11px] text-faint">
+          claim opens at $YAPCP launch.
+        </p>
       </div>
     </div>
   );

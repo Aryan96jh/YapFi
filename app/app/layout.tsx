@@ -1,7 +1,12 @@
-import Image from "next/image";
 import Link from "next/link";
 import { WalletProvider } from "@/components/WalletProvider";
-import WalletBar from "@/components/WalletBar";
+import Corners from "@/components/Corners";
+
+const NAV = [
+  ["chat", "/app/chat"],
+  ["tasks", "/app/tasks"],
+  ["dashboard", "/app/dashboard"],
+] as const;
 
 export default function AppLayout({
   children,
@@ -10,43 +15,27 @@ export default function AppLayout({
 }) {
   return (
     <WalletProvider>
-      <div className="min-h-screen">
-        <header className="border-b border-white/10">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo.svg"
-                alt="YapFi logo"
-                width={36}
-                height={36}
-                className="rounded-lg"
-              />
-              <span className="text-xl font-bold">YapFi</span>
-            </Link>
-            <nav className="flex items-center gap-5 text-sm">
-              <Link href="/app/chat" className="text-muted hover:text-ink">
-                Chat
-              </Link>
-              <Link href="/app/tasks" className="text-muted hover:text-ink">
-                Tasks
-              </Link>
+      <div className="relative min-h-screen bg-white text-ink">
+        <Corners />
+        <main className="mx-auto w-full max-w-2xl px-5 pb-28 pt-24">
+          <p className="mb-8 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-faint">
+            demo — typed-in wallet identity · not signed
+          </p>
+          {children}
+        </main>
+        <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-white/85 backdrop-blur">
+          <nav className="mx-auto flex max-w-2xl items-center justify-center gap-6 px-5 py-3">
+            {NAV.map(([label, href]) => (
               <Link
-                href="/app/dashboard"
-                className="text-muted hover:text-ink"
+                key={href}
+                href={href}
+                className="font-mono text-xs text-muted transition hover:text-ink"
               >
-                Dashboard
+                {label}
               </Link>
-            </nav>
-            <WalletBar />
-          </div>
-        </header>
-        <div className="mx-auto max-w-5xl px-4 pt-4">
-          <div className="rounded-lg border border-gold/40 bg-gold/10 px-4 py-2 text-xs text-gold">
-            DEMO &mdash; the wallet is a typed-in prototype identity. Production
-            will require signed-message auth.
-          </div>
-        </div>
-        <main className="mx-auto max-w-5xl px-4 pb-16 pt-6">{children}</main>
+            ))}
+          </nav>
+        </footer>
       </div>
     </WalletProvider>
   );
