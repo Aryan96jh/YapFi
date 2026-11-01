@@ -80,9 +80,11 @@ export async function POST(req: NextRequest) {
       verdict = demoVerdict(message);
       note = "duplicate message — no points for repeats";
     } else {
-      // (e)+(f) classify + score + reply (Groq when keyed, demo otherwise)
+      // (e)+(f) classify + score + reply (Groq when keyed, demo otherwise).
+      // Pass recent user messages as conversation context (newest last).
+      const history = (await recentMessageTexts(wallet, 6)).reverse();
       verdict = process.env.GROQ_API_KEY
-        ? await groqVerdict(message)
+        ? await groqVerdict(message, history)
         : demoVerdict(message);
       if (verdict.onTopic && !verdict.injection) {
         reward = TIER_REWARD[verdict.tier] ?? 0;
