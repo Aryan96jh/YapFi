@@ -36,7 +36,7 @@ The more you yap, the more you earn. Quality questions earn more than spam.
 
 - **Framework:** Next.js 14 (App Router) + TypeScript + Tailwind CSS — one deployable unit
 - **Database:** Postgres (`pg`) when `DATABASE_URL` is set (required on Vercel), SQLite (`better-sqlite3`) locally — dual backend behind `lib/db.ts`
-- **AI:** Groq (`llama-3.3-70b-versatile`) with the $YAPCP knowledge base, or built-in demo mode with zero keys
+- **AI:** Groq (`openai/gpt-oss-120b`) with the $YAPCP knowledge base, or built-in demo mode with zero keys
 - **X tasks:** self-reported (follow + like + retweet); X API v2 verification path parked in `lib/xverify.ts` for later
 - **Chain:** Solana (SPL $YAPCP at launch) — wallet connects via the official Solana wallet adapter (Phantom / Solflare); the connected address is the login and points save to it
 

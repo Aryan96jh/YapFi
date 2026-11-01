@@ -207,7 +207,7 @@ export async function groqVerdict(text: string): Promise<ChatVerdict> {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         temperature: 0.3,
         max_tokens: 600,
         messages: [
