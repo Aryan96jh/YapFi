@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, getUser, addLedger, genReferralCode, nowIso } from "@/lib/db";
+import {
+  getUser,
+  addLedger,
+  genReferralCode,
+  countTasks,
+  ignoreTask,
+  hasTaskBundleAward,
+  setReferralCode,
+  ignoreReferral,
+} from "@/lib/db";
 import { REWARDS } from "@/lib/rewards";
 import { verifyXTask } from "@/lib/xverify";
 
@@ -30,8 +39,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const db = getDb();
-  const user = getUser(wallet);
+  const user = await getUser(wallet);
   if (!user) {
     return NextResponse.json(
       { error: "unknown wallet — link your X handle first" },
@@ -58,37 +66,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  db.prepare(
-    "INSERT OR IGNORE INTO tasks (user_wallet, task_type, verified_at) VALUES (?, ?, ?)"
-  ).run(wallet, task, nowIso());
+  await ignoreTask(wallet, task);
 
-  const doneCount = (
-    db
-      .prepare("SELECT COUNT(*) AS c FROM tasks WHERE user_wallet = ?")
-      .get(wallet) as { c: number }
-  ).c;
+  const doneCount = await countTasks(wallet);
   const bundleComplete = doneCount >= 3;
 
   let bundleAwarded = false;
   let referralCode: string | null = user.referral_code;
   if (bundleComplete) {
-    const already = db
-      .prepare(
-        "SELECT 1 FROM ledger WHERE user_wallet = ? AND source = 'task' LIMIT 1"
-      )
-      .get(wallet);
+    const already = await hasTaskBundleAward(wallet);
     if (!already) {
-      addLedger(wallet, REWARDS.TASK_BUNDLE, "task");
-      referralCode = genReferralCode();
-      db.prepare("UPDATE users SET referral_code = ? WHERE wallet = ?").run(
-        referralCode,
-        wallet
-      );
+      await addLedger(wallet, REWARDS.TASK_BUNDLE, "task");
+      referralCode = await genReferralCode();
+      await setReferralCode(wallet, referralCode);
       if (user.referred_by) {
-        addLedger(user.referred_by, REWARDS.REFERRAL_BONUS, "referral");
-        db.prepare(
-          "INSERT OR IGNORE INTO referrals (referrer_wallet, referee_wallet, converted_at, created_at) VALUES (?, ?, ?, ?)"
-        ).run(user.referred_by, wallet, nowIso(), nowIso());
+        await addLedger(user.referred_by, REWARDS.REFERRAL_BONUS, "referral");
+        await ignoreReferral(user.referred_by, wallet);
       }
       bundleAwarded = true;
     }

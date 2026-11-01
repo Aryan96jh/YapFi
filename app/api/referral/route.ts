@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, getUser, getSplit } from "@/lib/db";
+import { getUser, getSplit, countClicks, countConversions } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -8,27 +8,14 @@ export async function GET(req: NextRequest) {
   if (!wallet) {
     return NextResponse.json({ error: "wallet is required" }, { status: 400 });
   }
-  const db = getDb();
-  const user = getUser(wallet);
+  const user = await getUser(wallet);
   if (!user) {
     return NextResponse.json({ error: "unknown wallet" }, { status: 404 });
   }
 
-  const clicks = user.referral_code
-    ? (
-        db
-          .prepare("SELECT COUNT(*) AS c FROM referral_clicks WHERE code = ?")
-          .get(user.referral_code) as { c: number }
-      ).c
-    : 0;
-  const conversions = (
-    db
-      .prepare(
-        "SELECT COUNT(*) AS c FROM referrals WHERE referrer_wallet = ? AND converted_at IS NOT NULL"
-      )
-      .get(wallet) as { c: number }
-  ).c;
-  const split = getSplit(wallet);
+  const clicks = user.referral_code ? await countClicks(user.referral_code) : 0;
+  const conversions = await countConversions(wallet);
+  const split = await getSplit(wallet);
 
   return NextResponse.json({
     code: user.referral_code,

@@ -112,9 +112,11 @@ Pre-launch, users earn **points 1:1** to future $YAPCP. The claim window opens i
 
 ## Deploy
 
-Vercel-ready: import the repo, framework preset **Next.js**, root directory as-is, no build overrides, no required env vars (demo mode). Set `GROQ_API_KEY`, `NEXT_PUBLIC_LAUNCH_POST_URL`, and `X_BEARER_TOKEN` in Vercel project settings when ready.
+Vercel-ready: import the repo, framework preset **Next.js**, root directory as-is, no build overrides.
 
-> **Heads-up:** SQLite does not persist on serverless — `data/yapfi.db` is ephemeral on Vercel. For anything beyond a demo, swap `lib/db.ts` for Postgres (Neon, Supabase…) and set `DATABASE_URL`; the schema is already plain SQL.
+**Database (required):** Vercel's serverless filesystem is read-only, so the app needs Postgres in production — set `DATABASE_URL` in the Vercel project settings (Environment Variables). Free options: [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project, copy the connection string, paste it as `DATABASE_URL`, redeploy. The schema is created automatically on first request. Locally, with `DATABASE_URL` unset, the app uses SQLite (`data/yapfi.db`, gitignored) with zero config.
+
+Optional: `GROQ_API_KEY` (real AI answers), `NEXT_PUBLIC_LAUNCH_POST_URL` (the X post for the engagement tasks), `X_BEARER_TOKEN` (real X verification). Without them the app runs in clearly-labeled demo mode.
 
 ## Concept & brand
 
