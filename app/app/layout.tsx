@@ -11,8 +11,8 @@ const WalletProvider = dynamic(
 );
 
 const NAV = [
-  ["chat", "/app/chat"],
   ["tasks", "/app/tasks"],
+  ["chat", "/app/chat"],
   ["dashboard", "/app/dashboard"],
 ] as const;
 
