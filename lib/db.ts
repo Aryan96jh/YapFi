@@ -605,7 +605,7 @@ export async function adminStats(): Promise<AdminStats> {
        SELECT user_wallet, created_at FROM ledger WHERE created_at >= ${P(1)}
        UNION ALL
        SELECT user_wallet, verified_at AS created_at FROM tasks WHERE verified_at >= ${P(1)}
-     ) GROUP BY day`, [day14, day14, day14]);
+     ) AS act GROUP BY day`, [day14, day14, day14]);
   const signupsByDay = new Map(signupRows.map((r) => [r.day, n(r.c)]));
   const activeByDay = new Map(activeDayRows.map((r) => [r.day, n(r.c)]));
   const daily: AdminStats["daily"] = [];
