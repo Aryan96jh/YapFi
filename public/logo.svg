@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="yapfi-g" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8B84B"/>
+      <stop offset="1" stop-color="#35D0E0"/>
+    </linearGradient>
+  </defs>
+  <rect x="30" y="26" width="196" height="164" rx="38" stroke="url(#yapfi-g)" stroke-width="14"/>
+  <path d="M102 188 L128 222 L154 188" stroke="url(#yapfi-g)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M92 78 L128 118 L164 78" stroke="url(#yapfi-g)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M128 118 L128 162" stroke="url(#yapfi-g)" stroke-width="14" stroke-linecap="round"/>
+</svg>
