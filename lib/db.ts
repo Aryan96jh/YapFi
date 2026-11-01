@@ -504,3 +504,140 @@ export async function insertClick(code: string): Promise<void> {
     [code, nowIso()]
   );
 }
+
+// ---------------------------------------------------------------------------
+// Admin analytics
+// ---------------------------------------------------------------------------
+
+export interface AdminUserRow {
+  wallet: string;
+  x_handle: string | null;
+  created_at: string;
+  balance: number;
+  chats: number;
+  tasks_done: number;
+  last_active: string | null;
+}
+
+export interface AdminStats {
+  totals: {
+    users: number;
+    usersToday: number;
+    chats: number;
+    rewardedChats: number;
+    pointsIssued: number;
+    tasksCompleted: number;
+    referralClicks: number;
+    referralConversions: number;
+  };
+  pointsBySource: { source: string; points: number }[];
+  churn: { eligible: number; active7d: number; churned: number; churnRate: number };
+  daily: { day: string; signups: number; active: number }[];
+  recentUsers: AdminUserRow[];
+  topEarners: AdminUserRow[];
+}
+
+const USER_STATS_SELECT = `
+SELECT u.wallet, u.x_handle, u.created_at,
+  COALESCE((SELECT SUM(l.amount) FROM ledger l WHERE l.user_wallet = u.wallet), 0) AS balance,
+  COALESCE((SELECT COUNT(*) FROM messages m WHERE m.user_wallet = u.wallet), 0) AS chats,
+  COALESCE((SELECT COUNT(*) FROM tasks t WHERE t.user_wallet = u.wallet), 0) AS tasks_done,
+  (SELECT MAX(x.created_at) FROM (
+    SELECT m2.created_at FROM messages m2 WHERE m2.user_wallet = u.wallet
+    UNION ALL
+    SELECT l2.created_at FROM ledger l2 WHERE l2.user_wallet = u.wallet
+    UNION ALL
+    SELECT t2.verified_at AS created_at FROM tasks t2 WHERE t2.user_wallet = u.wallet
+  ) x) AS last_active
+FROM users u`;
+
+export async function adminStats(): Promise<AdminStats> {
+  const pg = isPostgres();
+  const P = (i: number) => (pg ? `$${i}` : "?");
+  const day1 = new Date(Date.now() - 864e5).toISOString();
+  const day7 = new Date(Date.now() - 7 * 864e5).toISOString();
+  const day14 = new Date(Date.now() - 14 * 864e5).toISOString();
+
+  const count = async (sql: string, params: unknown[] = []) =>
+    n((await get<{ c: unknown }>(sql, params))?.c);
+
+  const users = await count("SELECT COUNT(*) AS c FROM users");
+  const usersToday = await count(
+    `SELECT COUNT(*) AS c FROM users WHERE created_at >= ${P(1)}`, [day1]);
+  const chats = await count("SELECT COUNT(*) AS c FROM messages");
+  const rewardedChats = await count(
+    "SELECT COUNT(*) AS c FROM messages WHERE reward > 0");
+  const pointsIssued = await count(
+    "SELECT COALESCE(SUM(amount), 0) AS c FROM ledger");
+  const tasksCompleted = await count("SELECT COUNT(*) AS c FROM tasks");
+  const referralClicks = await count("SELECT COUNT(*) AS c FROM referral_clicks");
+  const referralConversions = await count(
+    "SELECT COUNT(*) AS c FROM referrals WHERE converted_at IS NOT NULL");
+
+  const pointsBySource = (
+    await all<{ source: string; points: unknown }>(
+      "SELECT source, COALESCE(SUM(amount), 0) AS points FROM ledger GROUP BY source"
+    )
+  ).map((r) => ({ source: r.source, points: n(r.points) }));
+
+  // Churn: users registered >7d ago with zero activity in the last 7d.
+  const eligibleRows = await all<{ wallet: string }>(
+    `SELECT wallet FROM users WHERE created_at < ${P(1)}`, [day7]);
+  const activeRows = await all<{ w: string }>(
+    `SELECT DISTINCT user_wallet AS w FROM messages WHERE created_at >= ${P(1)}
+     UNION SELECT DISTINCT user_wallet FROM ledger WHERE created_at >= ${P(2)}
+     UNION SELECT DISTINCT user_wallet FROM tasks WHERE verified_at >= ${P(3)}`,
+    [day7, day7, day7]
+  );
+  const activeSet = new Set(activeRows.map((r) => r.w));
+  const eligible = eligibleRows.length;
+  const active7d = eligibleRows.filter((r) => activeSet.has(r.wallet)).length;
+  const churned = eligible - active7d;
+
+  // 14-day series: signups + distinct active wallets per day.
+  const signupRows = await all<{ day: string; c: unknown }>(
+    `SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS c FROM users
+     WHERE created_at >= ${P(1)} GROUP BY day`, [day14]);
+  const activeDayRows = await all<{ day: string; c: unknown }>(
+    `SELECT substr(created_at, 1, 10) AS day, COUNT(DISTINCT user_wallet) AS c FROM (
+       SELECT user_wallet, created_at FROM messages WHERE created_at >= ${P(1)}
+       UNION ALL
+       SELECT user_wallet, created_at FROM ledger WHERE created_at >= ${P(1)}
+       UNION ALL
+       SELECT user_wallet, verified_at AS created_at FROM tasks WHERE verified_at >= ${P(1)}
+     ) GROUP BY day`, [day14, day14, day14]);
+  const signupsByDay = new Map(signupRows.map((r) => [r.day, n(r.c)]));
+  const activeByDay = new Map(activeDayRows.map((r) => [r.day, n(r.c)]));
+  const daily: AdminStats["daily"] = [];
+  for (let i = 13; i >= 0; i--) {
+    const day = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+    daily.push({ day, signups: signupsByDay.get(day) ?? 0, active: activeByDay.get(day) ?? 0 });
+  }
+
+  const mapUser = (r: Record<string, unknown>): AdminUserRow => ({
+    wallet: String(r.wallet),
+    x_handle: (r.x_handle as string | null) ?? null,
+    created_at: String(r.created_at),
+    balance: n(r.balance),
+    chats: n(r.chats),
+    tasks_done: n(r.tasks_done),
+    last_active: (r.last_active as string | null) ?? null,
+  });
+  const recentUsers = (
+    await all<Record<string, unknown>>(`${USER_STATS_SELECT} ORDER BY u.created_at DESC LIMIT 50`)
+  ).map(mapUser);
+  const topEarners = (
+    await all<Record<string, unknown>>(
+      `SELECT * FROM (${USER_STATS_SELECT}) s ORDER BY s.balance DESC LIMIT 20`
+    )
+  ).map(mapUser);
+
+  return {
+    totals: { users, usersToday, chats, rewardedChats, pointsIssued, tasksCompleted, referralClicks, referralConversions },
+    pointsBySource,
+    churn: { eligible, active7d, churned, churnRate: eligible > 0 ? churned / eligible : 0 },
+    daily,
+    recentUsers,
+    topEarners,
+  };
+}

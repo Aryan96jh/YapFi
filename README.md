@@ -59,6 +59,7 @@ npm run dev            # http://localhost:3000
 | `NEXT_PUBLIC_X_HANDLE` | No | Official X handle users follow (without `@`). |
 | `NEXT_PUBLIC_LAUNCH_POST_URL` | No | URL of the official X launch post for the like/retweet tasks. Defaults to `#`. |
 | `X_BEARER_TOKEN` | No | Parked — X API v2 verification path in `lib/xverify.ts`, unused while tasks are self-reported. |
+| `ADMIN_KEY` | No | Private analytics dashboard at `/admin`. Pick any strong secret, set it in Vercel env, redeploy, then open `/admin` and enter it. Without it, `/api/admin/stats` returns 503. |
 
 No secrets are committed — `.env` and `data/*.db` are gitignored.
 
