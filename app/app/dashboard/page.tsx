@@ -16,6 +16,7 @@ interface Dash {
   };
   daily: { used: number; cap: number };
   claimOpen: boolean;
+  founding: { isFounding: boolean; spotsTaken: number; cap: number };
 }
 
 export default function DashboardPage() {
@@ -70,6 +71,17 @@ export default function DashboardPage() {
         <p className="mt-3 font-mono text-[11px] text-faint">
           1 point = 1 $YAPCP · claimable after launch
         </p>
+        {data.founding?.isFounding ? (
+          <p className="mt-3 inline-block rounded-full bg-ink px-4 py-1.5 font-mono text-[11px] text-white">
+            founding 100 · 2x chat earnings forever
+          </p>
+        ) : (
+          data.founding && data.founding.spotsTaken < data.founding.cap && (
+            <p className="mt-3 font-mono text-[11px] text-muted">
+              founding 100: {data.founding.cap - data.founding.spotsTaken} spots left for 2x earnings
+            </p>
+          )
+        )}
       </div>
 
       {/* split */}

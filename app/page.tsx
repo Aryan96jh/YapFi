@@ -75,6 +75,14 @@ function SectionLabel({ children }: { children: string }) {
 function Hero() {
   const router = useRouter();
   const [value, setValue] = useState("");
+  const [spotsLeft, setSpotsLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/founding")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setSpotsLeft(d.spotsLeft))
+      .catch(() => {});
+  }, []);
 
   const go = (text: string) => {
     const t = text.trim();
@@ -91,6 +99,15 @@ function Hero() {
       <p className="mt-4 text-center text-[15px] text-muted">
         yapfi is a chat-to-earn wrapper for $YAPCP — ask, learn, earn.
       </p>
+
+      {spotsLeft !== null && spotsLeft > 0 && (
+        <button
+          onClick={() => router.push("/app/tasks")}
+          className="mt-5 rounded-full bg-ink px-5 py-2 font-mono text-xs text-white transition hover:opacity-90"
+        >
+          founding 100 · {spotsLeft} spots left for 2x chat earnings forever
+        </button>
+      )}
 
       <div className="mt-8 w-full max-w-[660px]">
         <ChatInput

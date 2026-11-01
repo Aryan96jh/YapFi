@@ -7,6 +7,8 @@ import {
   lastRewardedAt,
   recentMessageTexts,
   insertMessage,
+  isFounding100,
+  FOUNDING_MULTIPLIER,
 } from "@/lib/db";
 import {
   REWARDS,
@@ -60,6 +62,7 @@ export async function POST(req: NextRequest) {
   let verdict: ChatVerdict;
   let reward = 0;
   let note: string | null = null;
+  let founding = false;
 
   // (b) rate limit: max 1 rewarded message per 2 minutes
   const lastRewarded = await lastRewardedAt(wallet);
@@ -88,6 +91,11 @@ export async function POST(req: NextRequest) {
         : demoVerdict(message);
       if (verdict.onTopic && !verdict.injection) {
         reward = TIER_REWARD[verdict.tier] ?? 0;
+        // Founding 100: 2x chat earnings forever (chat rewards only).
+        if (reward > 0 && (await isFounding100(wallet))) {
+          reward *= FOUNDING_MULTIPLIER;
+          founding = true;
+        }
       }
     }
   }
@@ -109,6 +117,7 @@ export async function POST(req: NextRequest) {
     reward,
     tier: verdict.tier,
     onTopic: verdict.onTopic,
+    founding,
     dailyUsed: todayUsed + (reward > 0 ? 1 : 0),
     dailyCap: REWARDS.DAILY_CAP,
     note,

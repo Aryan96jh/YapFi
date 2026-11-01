@@ -216,6 +216,13 @@ const CANNED: { pattern: RegExp; replies: string[] }[] = [
     ],
   },
   {
+    pattern: /founding|2x|double/i,
+    replies: [
+      "The Founding 100: the first 100 registered users get 2x chat earnings forever — a 100-pt answer pays 200, a 1,000-pt answer pays 2,000. It applies to chat rewards only, and once the 100 spots fill, it's closed for newcomers. The landing page shows spots left.",
+      "Founding members earn double on every chat reward, forever. If you're among the first 100 to register, you're in. Check the landing page for remaining spots — when they're gone, they're gone.",
+    ],
+  },
+  {
     pattern: /is this (a )?scam|legit|trust|safe/i,
     replies: [
       "Healthy skepticism. Here's the checkable stuff: YapFi never asks for your seed phrase, never asks for money, and there's no token to buy yet — so there's nothing to rug. Points are free rewards for engaging. The code's reward rules are exactly as documented. Always verify, never trust blindly.",

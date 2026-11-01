@@ -641,3 +641,34 @@ export async function adminStats(): Promise<AdminStats> {
     topEarners,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Founding 100 — first 100 registered users get 2x chat earnings forever.
+// ---------------------------------------------------------------------------
+
+export const FOUNDING_CAP = 100;
+export const FOUNDING_MULTIPLIER = 2;
+
+/** Number of founding spots taken (capped at FOUNDING_CAP). */
+export async function foundingSpotsTaken(): Promise<number> {
+  const c = n((await get<{ c: unknown }>("SELECT COUNT(*) AS c FROM users"))?.c);
+  return Math.min(c, FOUNDING_CAP);
+}
+
+/** True if this wallet is among the first FOUNDING_CAP registered users
+ *  (ordered by created_at, wallet as tiebreak). Unknown wallets → false. */
+export async function isFounding100(wallet: string): Promise<boolean> {
+  const pg = isPostgres();
+  const P = (i: number) => (pg ? `$${i}` : "?");
+  const exists = await get<{ wallet: string }>(
+    `SELECT wallet FROM users WHERE wallet = ${P(1)}`, [wallet]);
+  if (!exists) return false;
+  const row = await get<{ rank: unknown }>(
+    `SELECT COUNT(*) AS rank FROM users WHERE
+       created_at < (SELECT created_at FROM users WHERE wallet = ${P(1)})
+       OR (created_at = (SELECT created_at FROM users WHERE wallet = ${P(2)})
+           AND wallet < ${P(3)})`,
+    [wallet, wallet, wallet]
+  );
+  return n(row?.rank) < FOUNDING_CAP;
+}

@@ -7,6 +7,9 @@ import {
   countRewardedToday,
   countClicks,
   countConversions,
+  isFounding100,
+  foundingSpotsTaken,
+  FOUNDING_CAP,
 } from "@/lib/db";
 import { REWARDS } from "@/lib/rewards";
 
@@ -53,5 +56,10 @@ export async function GET(req: NextRequest) {
     },
     daily: { used: todayUsed, cap: REWARDS.DAILY_CAP },
     claimOpen: false,
+    founding: {
+      isFounding: await isFounding100(wallet),
+      spotsTaken: await foundingSpotsTaken(),
+      cap: FOUNDING_CAP,
+    },
   });
 }

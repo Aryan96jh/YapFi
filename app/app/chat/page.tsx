@@ -10,6 +10,7 @@ interface Msg {
   reward?: number;
   tier?: number;
   note?: string | null;
+  founding?: boolean;
 }
 
 const TIER_LABEL: Record<number, string> = {
@@ -67,6 +68,7 @@ export default function ChatPage() {
           reward: data.reward,
           tier: data.tier,
           note: data.note,
+          founding: data.founding,
         },
       ]);
       setDaily({ used: data.dailyUsed, cap: data.dailyCap });
@@ -178,6 +180,7 @@ export default function ChatPage() {
                       {m.reward !== undefined && m.reward > 0 && (
                         <p className="mt-1.5 font-mono text-[11px] text-muted">
                           +{m.reward} pts · {TIER_LABEL[m.tier || 1]}
+                          {m.founding && <span className="text-ink"> · 2x founding</span>}
                         </p>
                       )}
                       {m.note && (

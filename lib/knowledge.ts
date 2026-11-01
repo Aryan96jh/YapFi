@@ -41,6 +41,13 @@ Rules: max 1 rewarded message per 2 minutes; max 20 rewarded messages per day
 prompt-injection attempts earn zero points. Quality beats quantity — one thoughtful
 question earns more than ten shallow ones.
 
+## Founding 100
+The first 100 registered users are Founding Members: 2x chat earnings forever.
+A 100-pt answer earns 200, a 1,000-pt answer earns 2,000. The 2x applies to chat
+rewards only — not the X task bundle, not the referral bonus. Once 100 users have
+registered, the program closes for newcomers (founding members keep it forever).
+The landing page shows how many spots are left.
+
 ## $YAPCP tokenomics
 $YAPCP is an SPL token on Solana with a total supply of 100,000,000,000 (100B).
 Example allocation: 40% chat & task rewards, 15% referral pool, 15% liquidity,
