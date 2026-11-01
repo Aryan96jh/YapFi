@@ -42,7 +42,7 @@ const STEPS = [
   [
     "05",
     "refer & earn more",
-    "share your link: 2,500 pts per friend + 10% of their chat earnings.",
+    "share your link: 300 pts per friend + 10% of their chat earnings.",
   ],
 ];
 
@@ -51,7 +51,7 @@ const REWARDS: [string, string][] = [
   ["detailed question", "300 pts"],
   ["deep / researched question", "1,000 pts"],
   ["x task bundle", "5,000 pts · one-time"],
-  ["referral converts", "2,500 pts"],
+  ["referral converts", "300 pts"],
   ["referral chat earnings", "10% · forever"],
   ["daily cap", "20 rewarded msgs · ~20,000 pts max"],
 ];
@@ -206,7 +206,7 @@ export default function Landing() {
 
         <footer className="relative z-10 border-t border-line px-5 py-8">
           <p className="text-center font-mono text-[11px] text-faint">
-            yapfi prototype · demo build · nothing here is financial advice
+            nothing here is financial advice
           </p>
         </footer>
       </div>

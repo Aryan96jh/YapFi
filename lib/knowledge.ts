@@ -26,7 +26,7 @@ community that holds it. Learning is the proof of work.
    post, then tap "i did this" on each. Finishing all three earns a one-time 5,000 pts
    bonus and unlocks chat plus your referral link.
 4. Chat with the AI (that's me) about $YAPCP and earn points per quality message.
-5. Refer friends: you get a unique referral link. Earn 2,500 pts for every friend who
+5. Refer friends: you get a unique referral link. Earn 300 pts for every friend who
    completes the X tasks, plus 10% of everything they earn chatting — paid from a
    referral pool, never taken from your friend. Referrals are single-level only.
 6. Watch everything on your dashboard: total points, split across chat / tasks / referrals,

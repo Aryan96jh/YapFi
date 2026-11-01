@@ -285,7 +285,7 @@ export default function TasksPage() {
             bundle complete — chat is unlocked
           </p>
           <p className="mx-auto mt-3 max-w-md text-sm text-muted">
-            here is your referral link — share it to earn 2,500 pts per friend
+            here is your referral link — share it to earn 300 pts per friend
             + 10% of their chat earnings.
           </p>
         </div>

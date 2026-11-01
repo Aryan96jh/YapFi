@@ -6,7 +6,7 @@ export const REWARDS = {
   TIER_2: 300, // detailed question
   TIER_3: 1000, // deep / researched question
   TASK_BUNDLE: 5000, // X follow+like+retweet bundle, one-time
-  REFERRAL_BONUS: 2500, // per referee completing X tasks
+  REFERRAL_BONUS: 300, // per referee completing X tasks
   REFERRAL_PCT: 0.1, // of referee's chat earnings
   DAILY_CAP: 20, // rewarded messages per day
   COOLDOWN_MS: 2 * 60 * 1000, // 1 rewarded message per 2 minutes
@@ -135,16 +135,16 @@ const CANNED: { pattern: RegExp; replies: string[] }[] = [
   {
     pattern: /how (do|can) (i|you|we) earn|how to earn|earning|make money|get points/i,
     replies: [
-      "Three ways to earn: (1) Chat — quality questions about $YAPCP earn 100, 300, or 1,000 pts per message depending on depth, up to 20 rewarded messages a day. (2) X tasks — follow, like and retweet for a one-time 5,000 pts. (3) Referrals — 2,500 pts per friend who finishes the tasks, plus 10% of everything they earn chatting.",
-      "Earning here is simple: chat with me about $YAPCP (100–1,000 pts per good question, 20 a day max), smash the X task bundle for 5,000 pts one-time, and refer friends for 2,500 pts each plus 10% of their chat earnings forever. Quality beats quantity — one thoughtful question out-earns ten shallow ones.",
-      "You've got three income streams: the X tasks pay 5,000 pts once, chatting pays 100/300/1,000 pts per quality message (20/day), and referrals pay 2,500 pts per converted friend plus a 10% cut of their earnings. Which one do you want to start with?",
+      "Three ways to earn: (1) Chat — quality questions about $YAPCP earn 100, 300, or 1,000 pts per message depending on depth, up to 20 rewarded messages a day. (2) X tasks — follow, like and retweet for a one-time 5,000 pts. (3) Referrals — 300 pts per friend who finishes the tasks, plus 10% of everything they earn chatting.",
+      "Earning here is simple: chat with me about $YAPCP (100–1,000 pts per good question, 20 a day max), smash the X task bundle for 5,000 pts one-time, and refer friends for 300 pts each plus 10% of their chat earnings forever. Quality beats quantity — one thoughtful question out-earns ten shallow ones.",
+      "You've got three income streams: the X tasks pay 5,000 pts once, chatting pays 100/300/1,000 pts per quality message (20/day), and referrals pay 300 pts per converted friend plus a 10% cut of their earnings. Which one do you want to start with?",
     ],
   },
   {
     pattern: /referral|refer|invite/i,
     replies: [
-      "After you finish the X tasks you get a unique referral link. You earn 2,500 pts for every friend who completes the tasks, plus 10% of everything they earn chatting — paid from a referral pool, never taken from your friend. Referrals are single-level only.",
-      "Your referral link unlocks once the X tasks are done. Every friend who joins with it and finishes their tasks nets you 2,500 pts, and then you keep earning 10% of whatever they make chatting — forever, and it never comes out of their pocket. Share it wide.",
+      "After you finish the X tasks you get a unique referral link. You earn 300 pts for every friend who completes the tasks, plus 10% of everything they earn chatting — paid from a referral pool, never taken from your friend. Referrals are single-level only.",
+      "Your referral link unlocks once the X tasks are done. Every friend who joins with it and finishes their tasks nets you 300 pts, and then you keep earning 10% of whatever they make chatting — forever, and it never comes out of their pocket. Share it wide.",
     ],
   },
   {
@@ -224,8 +224,8 @@ const CANNED: { pattern: RegExp; replies: string[] }[] = [
 ];
 
 const FALLBACK_REPLIES = [
-  "Good question — here's the short version: YapFi pays you in points for engaging with $YAPCP. Chat with me to earn 100–1,000 pts per quality question (20 a day max), finish the X tasks for 5,000 pts, and refer friends for 2,500 pts plus 10% of their chat earnings. Ask me about earning, referrals, tokenomics, or the roadmap.",
-  "Here's the deal: everything on YapFi earns. Quality chat messages get 100–1,000 pts (20/day), the X task bundle pays 5,000 pts once, referrals pay 2,500 pts per friend plus 10% of their earnings. Points become $YAPCP 1:1 after launch. What do you want to explore first?",
+  "Good question — here's the short version: YapFi pays you in points for engaging with $YAPCP. Chat with me to earn 100–1,000 pts per quality question (20 a day max), finish the X tasks for 5,000 pts, and refer friends for 300 pts plus 10% of their chat earnings. Ask me about earning, referrals, tokenomics, or the roadmap.",
+  "Here's the deal: everything on YapFi earns. Quality chat messages get 100–1,000 pts (20/day), the X task bundle pays 5,000 pts once, referrals pay 300 pts per friend plus 10% of their earnings. Points become $YAPCP 1:1 after launch. What do you want to explore first?",
   "The loop is simple — connect wallet, do the X tasks, chat with me about $YAPCP, refer friends. Every step stacks points, and points convert 1:1 to $YAPCP at launch. Go deeper with me: ask about the tiers, the tokenomics, or where this is all headed.",
 ];
 
