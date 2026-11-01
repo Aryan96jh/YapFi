@@ -10,14 +10,13 @@ import {
   ignoreReferral,
 } from "@/lib/db";
 import { REWARDS } from "@/lib/rewards";
-import { verifyXTask } from "@/lib/xverify";
 
 export const dynamic = "force-dynamic";
 
-// TODO(prod): `wallet` is the prototype identity. Production MUST require a
-// signed message (e.g. Solana signMessage) to prove wallet ownership.
+// Task completion is self-reported: the user marks each task done after doing
+// it on X. No API check (X_BEARER_TOKEN path parked in lib/xverify.ts for later).
 
-const TASKS = ["like", "comment", "retweet"] as const;
+const TASKS = ["follow", "like", "retweet"] as const;
 type Task = (typeof TASKS)[number];
 
 export async function POST(req: NextRequest) {
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
   }
   if (!(TASKS as readonly string[]).includes(task)) {
     return NextResponse.json(
-      { error: "task must be one of: like, comment, retweet" },
+      { error: "task must be one of: follow, like, retweet" },
       { status: 400 }
     );
   }
@@ -47,26 +46,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Real X verification only when X_BEARER_TOKEN is set; otherwise demo mode.
-  let mode: "x-api" | "demo" | "demo-fallback" = "demo";
-  let note = "DEMO — self-confirmed. Set X_BEARER_TOKEN for real verification.";
-  if (process.env.X_BEARER_TOKEN) {
-    const postUrl = process.env.NEXT_PUBLIC_LAUNCH_POST_URL || "";
-    const res = await verifyXTask(
-      user.x_handle || "",
-      task as Task,
-      postUrl
-    );
-    if (res.ok) {
-      mode = "x-api";
-      note = res.note;
-    } else {
-      mode = "demo-fallback";
-      note = `X API check inconclusive (${res.note}) — demo self-confirm used.`;
-    }
-  }
-
-  await ignoreTask(wallet, task);
+  await ignoreTask(wallet, task as Task);
 
   const doneCount = await countTasks(wallet);
   const bundleComplete = doneCount >= 3;
@@ -90,8 +70,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     verified: true,
     task,
-    mode,
-    note,
+    mode: "self-reported",
+    note: "self-reported — complete each task on X, then mark it done.",
     bundleComplete,
     bundleAwarded,
     referralCode,

@@ -12,7 +12,7 @@ YapFi turns community engagement into a game. Instead of airdropping tokens to m
 
 1. **Connect** a Solana wallet
 2. **Link** your X (Twitter) account
-3. **Engage** — like, comment, and retweet the official launch post (verified)
+3. **Engage** — follow the X handle, like and retweet the launch post (self-reported)
 4. **Chat** with the $YAPCP AI assistant — it answers *only* project questions
 5. **Refer** friends with your personal link and earn a cut of everything they earn
 6. **Watch** your points grow on the dashboard, then **claim $YAPCP** after launch
@@ -26,7 +26,7 @@ The more you yap, the more you earn. Quality questions earn more than spam.
 | Good question in chat | 100 pts |
 | Detailed question | 300 pts |
 | Deep / researched question | 1,000 pts |
-| X task bundle (like + comment + retweet) | 5,000 pts (one-time) |
+| X task bundle (follow + like + retweet) | 5,000 pts (one-time) |
 | Referral converts (finishes X tasks) | 2,500 pts |
 | Referral chat earnings | 10% to referrer, forever |
 
@@ -35,10 +35,10 @@ The more you yap, the more you earn. Quality questions earn more than spam.
 ## Tech stack
 
 - **Framework:** Next.js 14 (App Router) + TypeScript + Tailwind CSS — one deployable unit
-- **Database:** SQLite (`better-sqlite3`) behind `lib/db.ts` — swap the module for Postgres in production
+- **Database:** Postgres (`pg`) when `DATABASE_URL` is set (required on Vercel), SQLite (`better-sqlite3`) locally — dual backend behind `lib/db.ts`
 - **AI:** Groq (`llama-3.3-70b-versatile`) with the $YAPCP knowledge base, or built-in demo mode with zero keys
-- **X verification:** X API v2 when `X_BEARER_TOKEN` is set, labeled demo self-confirm otherwise
-- **Chain:** Solana (SPL $YAPCP at launch; prototype identity is the wallet address)
+- **X tasks:** self-reported (follow + like + retweet); X API v2 verification path parked in `lib/xverify.ts` for later
+- **Chain:** Solana (SPL $YAPCP at launch) — wallet connects via the official Solana wallet adapter (Phantom / Solflare); the connected address is the login and points save to it
 
 ## Quickstart
 
@@ -55,8 +55,10 @@ npm run dev            # http://localhost:3000
 | Variable | Required | What it does |
 |---|---|---|
 | `GROQ_API_KEY` | No | Real AI assistant. Without it, chat runs in **demo mode**: keyword topic classifier + canned answers from the built-in $YAPCP knowledge base. |
-| `NEXT_PUBLIC_LAUNCH_POST_URL` | No | URL of the official X launch post for the engagement tasks. Defaults to `#`. |
-| `X_BEARER_TOKEN` | No | Real X API v2 verification of likes / retweets / comments. Without it, verification is a clearly-labeled demo self-confirm. |
+| `DATABASE_URL` | Yes (prod) | Postgres connection string — required on Vercel (read-only filesystem). Local dev falls back to SQLite. |
+| `NEXT_PUBLIC_X_HANDLE` | No | Official X handle users follow (without `@`). |
+| `NEXT_PUBLIC_LAUNCH_POST_URL` | No | URL of the official X launch post for the like/retweet tasks. Defaults to `#`. |
+| `X_BEARER_TOKEN` | No | Parked — X API v2 verification path in `lib/xverify.ts`, unused while tasks are self-reported. |
 
 No secrets are committed — `.env` and `data/*.db` are gitignored.
 
@@ -64,7 +66,7 @@ No secrets are committed — `.env` and `data/*.db` are gitignored.
 
 Out of the box (no keys), the full loop works end to end: wallet identity, X handle link, task verification, quality-tiered chat rewards with all anti-abuse guards, referrals, points ledger, dashboard. Add keys to graduate each piece to production behavior — the app detects what's configured and labels demo surfaces in the UI.
 
-> **Prototype notes:** wallet identity is a typed-in address (production must require signed-message auth — see the TODOs in the API routes). X handle linking is stored as typed (production: X OAuth).
+> **Notes:** wallet connects via the Solana wallet adapter (Phantom / Solflare) and the address is the login — points persist per wallet. Signed-message auth is future hardening (see the TODOs in the API routes). X handle linking is stored as typed (production: X OAuth).
 
 ## Project structure
 
@@ -116,7 +118,7 @@ Vercel-ready: import the repo, framework preset **Next.js**, root directory as-i
 
 **Database (required):** Vercel's serverless filesystem is read-only, so the app needs Postgres in production — set `DATABASE_URL` in the Vercel project settings (Environment Variables). Free options: [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project, copy the connection string, paste it as `DATABASE_URL`, redeploy. The schema is created automatically on first request. Locally, with `DATABASE_URL` unset, the app uses SQLite (`data/yapfi.db`, gitignored) with zero config.
 
-Optional: `GROQ_API_KEY` (real AI answers), `NEXT_PUBLIC_LAUNCH_POST_URL` (the X post for the engagement tasks), `X_BEARER_TOKEN` (real X verification). Without them the app runs in clearly-labeled demo mode.
+Required: `DATABASE_URL` (Postgres — Neon/Supabase free tier works). Optional: `GROQ_API_KEY` (real AI answers instead of demo replies), `NEXT_PUBLIC_X_HANDLE` (official X handle), `NEXT_PUBLIC_LAUNCH_POST_URL` (the X post for the like/retweet tasks). Set them in Vercel → Project → Settings → Environment Variables (all environments), then redeploy.
 
 ## Concept & brand
 

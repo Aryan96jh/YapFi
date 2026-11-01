@@ -7,7 +7,7 @@ export const KNOWLEDGE = `YapFi is a chat-to-earn AI wrapper around the $YAPCP t
 How it works:
 1. Connect a Solana wallet (one wallet per account).
 2. Enter your X (Twitter) handle and link it (one X account per wallet).
-3. Complete 3 X tasks on the official launch post: Like, Comment, Retweet. Verifying all three earns a one-time 5,000 pts bonus and unlocks chat.
+3. Follow the official X handle, then Like and Retweet the launch post. Completing all three earns a one-time 5,000 pts bonus and unlocks chat.
 4. You get a unique referral link. Earn 2,500 pts for every friend who completes the X tasks, plus 10% of everything they earn chatting (paid from a referral pool, never taken from the friend). Single-level referrals only.
 5. Chat with the AI about $YAPCP and earn points per quality message. Watch it all on the dashboard.
 

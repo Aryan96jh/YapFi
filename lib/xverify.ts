@@ -1,5 +1,7 @@
-// Best-effort X (Twitter) task verification.
-// Real verification needs X API v2 with elevated (paid-tier) access:
+// Best-effort X (Twitter) task verification — PARKED.
+// Task completion is currently self-reported (see app/api/tasks/verify).
+// Re-enable when X_BEARER_TOKEN (pay-per-use credits) is set up.
+// Real verification needs X API v2:
 //  - resolve handle -> user id:        GET /2/users/by/username/:handle
 //  - check like:                       GET /2/tweets/:id/liking_users
 //  - check retweet:                    GET /2/tweets/:id/retweeted_by

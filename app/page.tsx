@@ -31,7 +31,7 @@ const STEPS = [
   ["02", "enter your x id", "drop your handle and link your account."],
   [
     "03",
-    "like · comment · retweet",
+    "follow · like · retweet",
     "do all three on the launch post, get verified, earn 5,000 pts.",
   ],
   [

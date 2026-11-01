@@ -140,7 +140,7 @@ const CANNED: { pattern: RegExp; reply: string }[] = [
   {
     pattern: /task|like|retweet|comment/i,
     reply:
-      "The X task bundle is: Like, Comment, and Retweet the official launch post, then hit Verify on each. Completing all three earns a one-time 5,000 pts bonus and unlocks chat and your referral link.",
+      "The X task bundle is: Follow the official X handle, Like and Retweet the launch post, then hit \u201ci did this\u201d on each. Completing all three earns a one-time 5,000 pts bonus and unlocks chat and your referral link.",
   },
   {
     pattern: /claim|launch|tge|when.*(token|live)/i,

@@ -3,28 +3,38 @@ import { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@/components/WalletProvider";
 
 const POST_URL = process.env.NEXT_PUBLIC_LAUNCH_POST_URL || "#";
+const X_HANDLE = (process.env.NEXT_PUBLIC_X_HANDLE || "").replace(/^@/, "");
+const X_PROFILE_URL = X_HANDLE ? `https://x.com/${X_HANDLE}` : "#";
 
 const TASK_DEFS = [
   {
-    id: "like",
-    title: "like the post",
-    text: "tap like on the official launch post.",
+    id: "follow",
+    title: "follow on x",
+    text: X_HANDLE
+      ? `follow @${X_HANDLE} on x.`
+      : "follow the official x handle.",
+    link: X_PROFILE_URL,
+    linkLabel: X_HANDLE ? `open @${X_HANDLE} on x` : "official x handle",
   },
   {
-    id: "comment",
-    title: "comment on the post",
-    text: "leave a comment on the launch post.",
+    id: "like",
+    title: "like the post",
+    text: "tap like on the launch post.",
+    link: POST_URL,
+    linkLabel: "open the launch post",
   },
   {
     id: "retweet",
     title: "retweet the post",
     text: "retweet the launch post to your followers.",
+    link: POST_URL,
+    linkLabel: "open the launch post",
   },
 ];
 
 interface Dash {
   x_handle: string | null;
-  tasks: { like: boolean; comment: boolean; retweet: boolean; allDone: boolean };
+  tasks: { follow: boolean; like: boolean; retweet: boolean; allDone: boolean };
   referral: { code: string | null; link: string | null };
 }
 
@@ -33,8 +43,8 @@ export default function TasksPage() {
   const [handle, setHandle] = useState("");
   const [linked, setLinked] = useState<string | null>(null);
   const [tasks, setTasks] = useState({
+    follow: false,
     like: false,
-    comment: false,
     retweet: false,
   });
   const [refLink, setRefLink] = useState<string | null>(null);
@@ -54,8 +64,8 @@ export default function TasksPage() {
         setLinked(d.x_handle);
         if (d.x_handle) setHandle(d.x_handle);
         setTasks({
+          follow: d.tasks.follow,
           like: d.tasks.like,
-          comment: d.tasks.comment,
           retweet: d.tasks.retweet,
         });
         setRefLink(d.referral.link);
@@ -100,7 +110,7 @@ export default function TasksPage() {
     }
   };
 
-  const verify = async (task: string) => {
+  const markDone = async (task: string) => {
     if (!wallet) return;
     setBusy(task);
     setError(null);
@@ -112,7 +122,7 @@ export default function TasksPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "verification failed");
+        setError(data.error || "failed — try again");
         return;
       }
       setTasks((t) => ({ ...t, [task]: true }));
@@ -143,14 +153,14 @@ export default function TasksPage() {
     );
   }
 
-  const allDone = tasks.like && tasks.comment && tasks.retweet;
+  const allDone = tasks.follow && tasks.like && tasks.retweet;
 
   return (
     <div>
       <h1 className="text-xl font-light lowercase text-ink">x tasks</h1>
       <p className="mt-2 text-sm text-muted">
-        complete all three on the launch post to unlock chat and earn a
-        one-time <span className="font-mono text-ink">5,000 pts</span> bonus.
+        complete all three to unlock chat and earn a one-time{" "}
+        <span className="font-mono text-ink">5,000 pts</span> bonus.
       </p>
 
       {error && (
@@ -159,10 +169,28 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* 01 — link x handle */}
+      {/* 01 — follow & link x handle */}
       <div className="mt-8 border-t border-line pt-6">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-faint">
-          01 — link x
+          01 — follow & link x
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          {X_HANDLE ? (
+            <>
+              follow{" "}
+              <a
+                href={X_PROFILE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-ink underline underline-offset-2"
+              >
+                @{X_HANDLE}
+              </a>{" "}
+              on x, then enter your handle below.
+            </>
+          ) : (
+            "follow the official x handle, then enter your handle below."
+          )}
         </p>
         <div className="mt-4 flex gap-2">
           <input
@@ -186,9 +214,6 @@ export default function TasksPage() {
             </span>
           )}
         </div>
-        <p className="mt-2 font-mono text-[10px] text-faint">
-          demo — handle is stored as typed. production will use x oauth.
-        </p>
       </div>
 
       {/* 02 — the three tasks */}
@@ -210,26 +235,22 @@ export default function TasksPage() {
                     <h3 className="text-[15px] text-ink">{t.title}</h3>
                     {done && (
                       <span className="font-mono text-[11px] text-muted">
-                        verified
+                        done
                       </span>
                     )}
                   </div>
                   <p className="mt-0.5 text-sm text-muted">{t.text}</p>
                   <a
-                    href={POST_URL}
+                    href={t.link}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-1.5 inline-block font-mono text-xs text-muted underline underline-offset-2 hover:text-ink"
                   >
-                    open the launch post
+                    {t.linkLabel}
                   </a>
-                  <p className="mt-1 font-mono text-[10px] text-faint">
-                    demo — self-confirm. set X_BEARER_TOKEN for real
-                    verification.
-                  </p>
                 </div>
                 <button
-                  onClick={() => verify(t.id)}
+                  onClick={() => markDone(t.id)}
                   disabled={!enabled || busy === t.id}
                   className={`shrink-0 rounded-full px-5 py-2 text-sm transition ${
                     done
@@ -240,8 +261,8 @@ export default function TasksPage() {
                   {done
                     ? "done"
                     : busy === t.id
-                      ? "verifying…"
-                      : "verify"}
+                      ? "saving…"
+                      : "i did this"}
                 </button>
               </div>
             );
@@ -249,9 +270,12 @@ export default function TasksPage() {
         </div>
         {!linked && (
           <p className="mt-4 font-mono text-[11px] text-faint">
-            link your x handle above to enable verification.
+            link your x handle above to enable the tasks.
           </p>
         )}
+        <p className="mt-4 font-mono text-[10px] text-faint">
+          completion is self-reported for now.
+        </p>
       </div>
 
       {justAwarded && (

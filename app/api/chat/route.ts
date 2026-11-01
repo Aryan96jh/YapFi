@@ -19,9 +19,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// TODO(prod): `wallet` is the prototype identity. Production MUST require a
-// signed message (e.g. Solana signMessage) to prove wallet ownership before
-// accepting it as an identity.
+// Identity: the connected Solana wallet's public key (via wallet adapter).
+// Future hardening: require a signed message (Solana signMessage) to prove
+// wallet ownership before accepting it as an identity.
 
 export async function POST(req: NextRequest) {
   let body: { wallet?: unknown; message?: unknown };

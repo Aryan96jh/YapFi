@@ -12,7 +12,7 @@ import { REWARDS } from "@/lib/rewards";
 
 export const dynamic = "force-dynamic";
 
-const TASK_TYPES = ["like", "comment", "retweet"];
+const TASK_TYPES = ["follow", "like", "retweet"];
 
 export async function GET(req: NextRequest) {
   const wallet = req.nextUrl.searchParams.get("wallet")?.trim() || "";

@@ -6,7 +6,7 @@ import { useWallet } from "@/components/WalletProvider";
 interface Dash {
   balance: number;
   split: { chat: number; tasks: number; referrals: number };
-  tasks: { like: boolean; comment: boolean; retweet: boolean; allDone: boolean };
+  tasks: { follow: boolean; like: boolean; retweet: boolean; allDone: boolean };
   referral: {
     code: string | null;
     link: string | null;
@@ -120,7 +120,7 @@ export default function DashboardPage() {
           x tasks
         </p>
         <div className="mt-2">
-          {(["like", "comment", "retweet"] as const).map((t) => (
+          {(["follow", "like", "retweet"] as const).map((t) => (
             <div
               key={t}
               className="flex items-center justify-between border-b border-line py-3"

@@ -1,23 +1,38 @@
 "use client";
 import { useState } from "react";
+import {
+  useWallet as useAdapterWallet,
+  type Wallet,
+} from "@solana/wallet-adapter-react";
+import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { useWallet } from "./WalletProvider";
 
+const INSTALL_URLS: Record<string, string> = {
+  Phantom: "https://phantom.app/download",
+  Solflare: "https://solflare.com/download",
+};
+
 /**
- * White bordered pill. Unconnected: opens a small panel to paste an address.
- * Connected: shows the truncated address with a quiet disconnect.
- * Identity logic is unchanged: typed-in address stored in localStorage.
+ * White bordered pill, matching the site's minimal style.
+ * Unconnected: lists Phantom / Solflare — connect if installed, install link if not.
+ * Connected: truncated address with wallet name + quiet disconnect.
  */
 export default function WalletBar() {
   const { wallet, setWallet } = useWallet();
+  const { wallets, select, connect, connecting, wallet: active } =
+    useAdapterWallet();
   const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const connect = () => {
-    const v = input.trim();
-    if (!v) return;
-    setWallet(v);
-    setInput("");
-    setOpen(false);
+  const doConnect = async (w: Wallet) => {
+    setError(null);
+    try {
+      select(w.adapter.name);
+      await connect();
+      setOpen(false);
+    } catch {
+      setError("connection rejected — try again");
+    }
   };
 
   if (wallet) {
@@ -39,7 +54,7 @@ export default function WalletBar() {
               {wallet}
             </p>
             <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-faint">
-              demo identity — typed in
+              via {active?.adapter.name ?? "wallet"}
             </p>
             <button
               onClick={() => {
@@ -67,28 +82,52 @@ export default function WalletBar() {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-line bg-white p-3 shadow-pop">
           <p className="font-mono text-[10px] uppercase tracking-wider text-faint">
-            demo — paste any address
+            solana wallet
           </p>
-          <div className="mt-2 flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") connect();
-                if (e.key === "Escape") setOpen(false);
-              }}
-              placeholder="wallet address"
-              autoFocus
-              className="min-w-0 flex-1 rounded-xl border border-line bg-white px-3 py-2 font-mono text-xs text-ink placeholder:text-faint focus:border-ink focus:outline-none"
-            />
-            <button
-              onClick={connect}
-              disabled={!input.trim()}
-              className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm text-white transition hover:opacity-80 disabled:opacity-30"
-            >
-              connect
-            </button>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {wallets.map((w) => {
+              const installed =
+                w.readyState === WalletReadyState.Installed ||
+                w.readyState === WalletReadyState.Loadable;
+              const installUrl = INSTALL_URLS[w.adapter.name];
+              return (
+                <div
+                  key={w.adapter.name}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-line px-3 py-2"
+                >
+                  <span className="text-sm text-ink">{w.adapter.name}</span>
+                  {installed ? (
+                    <button
+                      onClick={() => doConnect(w)}
+                      disabled={connecting}
+                      className="rounded-full bg-ink px-4 py-1 text-xs text-white transition hover:opacity-80 disabled:opacity-30"
+                    >
+                      {connecting ? "connecting…" : "connect"}
+                    </button>
+                  ) : installUrl ? (
+                    <a
+                      href={installUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full border border-line px-4 py-1 font-mono text-xs text-muted transition hover:border-ink hover:text-ink"
+                    >
+                      install
+                    </a>
+                  ) : (
+                    <span className="font-mono text-[11px] text-faint">
+                      not detected
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
+          {error && (
+            <p className="mt-2 font-mono text-[11px] text-muted">{error}</p>
+          )}
+          <p className="mt-2 font-mono text-[10px] text-faint">
+            your wallet is your login — points save to this address
+          </p>
         </div>
       )}
     </div>
